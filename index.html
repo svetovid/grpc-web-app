@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Webpack App</title>
+    </head>
+    <body>
+        <h2>gRPC js testing</h2>
+        <button id="btn_start" onclick="connectToStream()">Start stream</button>
+        <hr/>
+        <div id="out_tank" class="out_tank" style="left: 10px; top: 10px;">
+            <svg viewBox="0 0 52 152" width="52" height="152">
+                <path d="M 0 10
+                         A 25 10 0 0 1 50 10
+                         L 50 160
+                         A 25 10 0 0 0 0 160
+                         L 0 10" stroke="none" fill="#cbe7f7" />
+                <ellipse cx="25" cy="140" fill="#32487a" stroke="#757a85" style="opacity:.7" rx="25" ry="10" />
+                <ellipse cx="25" cy="160" fill="#1874c9" style="opacity:.5" rx="25" ry="10" />
+                <ellipse cx="25" cy="10" fill="none" stroke="#757a85" style="opacity:.7" rx="25" ry="10" />
+                <line y2="140" x2="0" y1="10" x1="0" stroke="#757a85" fill="none" style="opacity:.7" />
+                <line y2="140" x2="50" y1="10" x1="50" stroke="#757a85" fill="none" style="opacity:.7" />
+                <path d="M 0 160
+                         A 25 10 0 0 0 50 160
+                         L 50 140
+                         A 25 10 0 0 1 0 140
+                         L 0 160" stroke="none" fill="#159eed" fill-opacity="0.7"/>
+              </svg>
+        </div>
+        <textarea id="log_control" rows="20" cols="50"></textarea>
+    </body>
+    
+    <script>
+        var logFlushCount = 0;
+        var started = false;
+
+        window.onload = (event) => {
+            getTags();
+        };
+
+        connectToStream = function() {
+            let elementPlaceholder = document.getElementById('btn_start');
+            if (started) {
+                elementPlaceholder.innerText = 'Start stream';
+                disconnectFromHub();
+                started = false;
+            }
+            else {
+                elementPlaceholder.innerText = 'Stop stream';
+                connectToHub();
+                started = true;
+            }
+        };
+
+        logTagValues = function(tags) {
+            let elementPlaceholder = document.getElementById('log_control');
+            if (logFlushCount > 20)
+                elementPlaceholder.value = '';
+            
+            tags.forEach(t => {
+                elementPlaceholder.value += `${t.id} = ${t.value}\n`;
+                logFlushCount++;
+            });
+            elementPlaceholder.value += `----------\n`;
+        };
+
+        renderGauge = function(val) {
+            var height = 130;
+            if (val === null)
+                return;
+            let scale = height - val * height / 100 + 10;
+
+            let elementPlaceholder = document.getElementById('out_tank');
+            elementPlaceholder.innerHTML = `<svg viewBox="0 0 52 152" width="52" height="152">
+                <path d="M 0 10
+                         A 25 10 0 0 1 50 10
+                         L 50 ${scale}
+                         A 25 10 0 0 0 0 ${scale}
+                         L 0 10" stroke="none" fill="#cbe7f7" />
+                <ellipse cx="25" cy="140" fill="#32487a" stroke="#757a85" style="opacity:.7" rx="25" ry="10" />
+                <ellipse cx="25" cy="${scale}" fill="#1874c9" style="opacity:.5" rx="25" ry="10" />
+                <ellipse cx="25" cy="10" fill="none" stroke="#757a85" style="opacity:.7" rx="25" ry="10" />
+                <line y2="140" x2="0" y1="10" x1="0" stroke="#757a85" fill="none" style="opacity:.7" />
+                <line y2="140" x2="50" y1="10" x1="50" stroke="#757a85" fill="none" style="opacity:.7" />
+                <path d="M 0 ${scale}
+                         A 25 10 0 0 0 50 ${scale}
+                         L 50 140
+                         A 25 10 0 0 1 0 140
+                         L 0 ${scale}" stroke="none" fill="#159eed" fill-opacity="0.7"/>
+              </svg>`;
+        };
+
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker
+                    .register("service-worker.js")
+                    .then((registration) => {
+                        console.log("Service Worker registered: ", registration);
+                    })
+                    .catch((registrationError) => {
+                        console.error("Service Worker registration failed: ", registrationError);
+                    });
+            });
+        }
+    </script>
+</html>
